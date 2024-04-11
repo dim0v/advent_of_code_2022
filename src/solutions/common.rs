@@ -1,3 +1,3 @@
 use crate::Stage;
 
-pub type SolverFunc = fn(stage: Stage, input: Vec<String>) -> i128;
+pub type SolverFunc = fn(stage: Stage, input: Vec<String>) -> i64;
