@@ -1,6 +1,6 @@
-use std::{env, io};
 use std::error::Error;
 use std::str::FromStr;
+use std::{env, io};
 
 use anyhow::anyhow;
 
@@ -24,6 +24,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 enum Stage {
     Easy,
     Hard,
+}
+
+impl Stage {
+    fn is_hard(&self) -> bool {
+        match self {
+            Stage::Hard => true,
+            Stage::Easy => false,
+        }
+    }
 }
 
 impl FromStr for Stage {
@@ -62,5 +71,5 @@ fn read_input(day: u8) -> io::Result<Vec<String>> {
 
     let split = data.split("\n");
 
-    Ok(Vec::from_iter(split.map(|x| String::from(x))))
+    Ok(Vec::from_iter(split.map(|x| String::from(x.trim()))))
 }
