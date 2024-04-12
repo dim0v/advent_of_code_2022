@@ -9,7 +9,7 @@ use advent_of_code_2022::solutions::get_solver_for_day;
 use advent_of_code_2022::*;
 use lazy_static::lazy_static;
 
-const N_DAYS: u8 = 5;
+const N_DAYS: u8 = 6;
 
 static ANSWERS: [[&str; 2]; N_DAYS as usize] = [
     ["69795", "208437"],
@@ -17,6 +17,7 @@ static ANSWERS: [[&str; 2]; N_DAYS as usize] = [
     ["7785", "2633"],
     ["569", "936"],
     ["RLFNRTNFB", "MHQTLJRLB"],
+    ["1582", "3588"]
 ];
 
 lazy_static! {
@@ -38,7 +39,7 @@ fn compute_answer(day: u8, stage: Stage) -> String {
     get_solver_for_day(day)(stage, get_input(day))
 }
 
-seq!(N in 1..=5 {
+seq!(N in 1..=6 {
     #(
     #[test]
     fn easy_day~N() {
