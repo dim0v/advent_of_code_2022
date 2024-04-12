@@ -71,5 +71,7 @@ fn read_input(day: u8) -> io::Result<Vec<String>> {
 
     let split = data.split("\n");
 
-    Ok(Vec::from_iter(split.map(|x| String::from(x.trim()))))
+    let trimmed = split
+        .map(|x| String::from(x.trim_end_matches(|c| c == '\n' || c == '\r')));
+    Ok(Vec::from_iter(trimmed))
 }
