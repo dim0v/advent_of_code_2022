@@ -11,7 +11,7 @@ use lazy_static::lazy_static;
 
 const N_DAYS: u8 = 7;
 
-static ANSWERS: [[&str; 2]; N_DAYS as usize] = [
+static ANSWERS: &[[&str; 2]] = &[
     ["69795", "208437"],
     ["13268", "15508"],
     ["7785", "2633"],
@@ -56,17 +56,17 @@ fn bench_total(b: &mut Bencher) {
 }
 
 lazy_static! {
-    static ref INPUT_CACHE: HashMap<u8, Vec<String>> = {
+    static ref INPUT_CACHE: HashMap<u8, Vec<&'static str>> = {
         let mut m = HashMap::new();
 
         for d in 1..=N_DAYS {
-            m.insert(d, read_input(d).unwrap());
+            m.insert(d, process_input(d));
         }
         m
     };
 }
 
-fn get_input(day: u8) -> &'static Vec<String> {
+fn get_input(day: u8) -> &'static Vec<&'static str> {
     INPUT_CACHE.get(&day).unwrap()
 }
 

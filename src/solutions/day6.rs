@@ -1,6 +1,6 @@
 use crate::Stage;
 
-pub fn solve(stage: Stage, input: &Vec<String>) -> String {
+pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
     let input = &input[0];
 
     find_sop_marker(
@@ -13,7 +13,7 @@ pub fn solve(stage: Stage, input: &Vec<String>) -> String {
     .to_string()
 }
 
-fn find_sop_marker(s: &String, cnt: usize) -> usize {
+fn find_sop_marker(s: &str, cnt: usize) -> usize {
     let mut buf: Vec<char> = s.chars().take(cnt).collect();
     let mut head = 0;
 

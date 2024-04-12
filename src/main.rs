@@ -3,14 +3,14 @@ use std::error::Error;
 
 use anyhow::anyhow;
 use advent_of_code_2022::solutions::get_solver_for_day;
-use advent_of_code_2022::{read_input, Stage};
+use advent_of_code_2022::{process_input, Stage};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = parse_args()?;
     println!("day = {}, stage = {:?}", args.day, args.stage);
 
     let solver = get_solver_for_day(args.day);
-    let result = solver(args.stage, &read_input(args.day)?);
+    let result = solver(args.stage, &process_input(args.day));
 
     println!("{}", result);
 

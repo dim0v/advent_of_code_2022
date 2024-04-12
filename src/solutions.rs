@@ -18,3 +18,13 @@ seq!(N in 1..=7 {
         }
     }
 });
+
+pub static INPUTS: &[&str] = &[
+    include_str!("../inputs/day1.txt"),
+    include_str!("../inputs/day2.txt"),
+    include_str!("../inputs/day3.txt"),
+    include_str!("../inputs/day4.txt"),
+    include_str!("../inputs/day5.txt"),
+    include_str!("../inputs/day6.txt"),
+    include_str!("../inputs/day7.txt"),
+];

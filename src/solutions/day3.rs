@@ -2,22 +2,22 @@ use crate::Stage;
 use std::collections::HashSet;
 use std::hash::RandomState;
 
-pub fn solve(stage: Stage, input: &Vec<String>) -> String {
-    let src = input.iter().map(|x| x.as_str());
+pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
+    let src = input.iter();
 
-    let src: Vec<char> = match stage {
+    let result: i64 = match stage {
         Stage::Easy => src
-            .map(split_in_halves)
+            .map(|x| split_in_halves(x))
             .map(|x| get_common_char(x.iter().map(|x| *x)))
-            .collect(),
+            .map(|c| get_priority(c))
+            .sum(),
         Stage::Hard => src
-            .collect::<Vec<&str>>()
+            .collect::<Vec<&&str>>()
             .chunks(3)
-            .map(|x| get_common_char(x.iter().map(|x| *x)))
-            .collect(),
+            .map(|x| get_common_char(x.iter().map(|x| **x)))
+            .map(|c| get_priority(c))
+            .sum(),
     };
-
-    let result: i64 = src.iter().map(get_priority).sum();
 
     result.to_string()
 }
@@ -37,10 +37,10 @@ fn get_common_char<'a>(strings: impl Iterator<Item = &'a str>) -> char {
     intersection.iter().next().unwrap().clone()
 }
 
-fn get_priority(c: &char) -> i64 {
+fn get_priority(c: char) -> i64 {
     match c {
-        'a'..='z' => *c as i64 - 'a' as i64 + 1,
-        'A'..='Z' => *c as i64 - 'A' as i64 + 27,
+        'a'..='z' => c as i64 - 'a' as i64 + 1,
+        'A'..='Z' => c as i64 - 'A' as i64 + 27,
         _ => {
             panic!()
         }

@@ -3,7 +3,7 @@ use crate::Stage;
 use anyhow::anyhow;
 use std::str::FromStr;
 
-pub fn solve(stage: Stage, input: &Vec<String>) -> String {
+pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
     let mut rounds = Vec::from_iter(input.iter().map(|v| v.parse::<Round>().unwrap()));
 
     if stage.is_hard() {

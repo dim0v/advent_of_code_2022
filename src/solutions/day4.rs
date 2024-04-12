@@ -3,7 +3,7 @@ use std::error::Error;
 use std::ops::RangeInclusive;
 use std::str::FromStr;
 
-pub fn solve(stage: Stage, input: &Vec<String>) -> String {
+pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
     let pairs = input.iter().map(|x| x.parse().unwrap());
 
     let result = pairs.filter(|x: &JobPair| match stage {

@@ -1,17 +1,12 @@
-use std::io;
 use std::str::FromStr;
+use solutions::INPUTS;
 
 pub mod solutions;
 
-pub fn read_input(day: u8) -> io::Result<Vec<String>> {
-    let file_name = format!("inputs/day{}.txt", day);
-    let data = std::fs::read_to_string(file_name)?;
+pub fn process_input(day: u8) -> Vec<&'static str> {
+    let data = INPUTS[day as usize - 1];
 
-    let split = data.split("\n");
-
-    let trimmed = split
-        .map(|x| String::from(x.trim_end_matches(|c| c == '\n' || c == '\r')));
-    Ok(Vec::from_iter(trimmed))
+    data.split('\n').collect()
 }
 
 #[derive(Debug)]

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::Stage;
 
-pub fn solve(stage: Stage, input: &Vec<String>) -> String {
+pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
     let mut tree = build_tree(input);
     tree.update_total_size();
 
@@ -35,7 +35,7 @@ fn solve_easy(tree: &Directory) -> usize {
     size
 }
 
-fn build_tree(input: &Vec<String>) -> Directory {
+fn build_tree(input: &[&str]) -> Directory {
     let mut root = Directory::new();
     root.add_dir("/");
     let mut cwd = &mut root;
@@ -43,7 +43,7 @@ fn build_tree(input: &Vec<String>) -> Directory {
     let mut stack: Vec<&str> = Vec::new();
 
     for row in input {
-        if row == "$ ls" {
+        if *row == "$ ls" {
             continue;
         }
 

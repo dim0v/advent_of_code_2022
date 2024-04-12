@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use crate::Stage;
 
-pub fn solve(stage: Stage, input: &Vec<String>) -> String {
+pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
     let mut stacks = CrateStacks::from_strings(input.iter().take_while(|s| s.len() > 0).collect());
 
     let moves = input
@@ -30,7 +30,7 @@ struct CrateStacks {
 }
 
 impl CrateStacks {
-    fn from_strings(ss: Vec<&String>) -> CrateStacks {
+    fn from_strings(ss: Vec<&&str>) -> CrateStacks {
         let cnt = (ss[0].len() + 1) / 4;
 
         let mut stacks = Vec::with_capacity(cnt);
