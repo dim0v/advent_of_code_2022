@@ -2,7 +2,7 @@ use crate::Stage;
 use std::collections::HashSet;
 use std::hash::RandomState;
 
-pub fn solve(stage: Stage, input: Vec<String>) -> String {
+pub fn solve(stage: Stage, input: &Vec<String>) -> String {
     let src = input.iter().map(|x| x.as_str());
 
     let src: Vec<char> = match stage {
@@ -18,7 +18,7 @@ pub fn solve(stage: Stage, input: Vec<String>) -> String {
     };
 
     let result: i64 = src.iter().map(get_priority).sum();
-    
+
     result.to_string()
 }
 

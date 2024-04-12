@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use crate::Stage;
 
-pub fn solve(stage: Stage, input: Vec<String>) -> String {
+pub fn solve(stage: Stage, input: &Vec<String>) -> String {
     let mut stacks = CrateStacks::from_strings(input.iter().take_while(|s| s.len() > 0).collect());
 
     let moves = input

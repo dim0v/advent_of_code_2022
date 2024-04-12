@@ -1,6 +1,6 @@
 use crate::Stage;
 
-pub fn solve(stage: Stage, input: Vec<String>) -> String {
+pub fn solve(stage: Stage, input: &Vec<String>) -> String {
     let mut sums = Vec::<i64>::new();
     let mut current_sum = 0i64;
 
