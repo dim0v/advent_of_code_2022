@@ -4,7 +4,7 @@ use std::hash::RandomState;
 
 pub fn solve(stage: Stage, input: Vec<String>) -> i64 {
     let src = input.iter().map(|x| x.as_str());
-    
+
     let src: Vec<char> = match stage {
         Stage::Easy => src
             .map(split_in_halves)

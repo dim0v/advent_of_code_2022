@@ -1,6 +1,6 @@
+use std::{env, io};
 use std::error::Error;
 use std::str::FromStr;
-use std::{env, io};
 
 use anyhow::anyhow;
 
@@ -52,15 +52,15 @@ struct Args {
 }
 
 fn parse_args() -> Result<Args, Box<dyn Error>> {
-    if env::args().count() < 3 {
-        let err = anyhow!("Expected 2 arguments. Received {}", env::args().count() - 1);
+    if env::args().count() < 2 {
+        let err = anyhow!("Day argument is required");
         return Err(err.into());
     }
 
     let mut args = env::args().skip(1);
 
     let day: u8 = args.next().unwrap().parse()?;
-    let stage: Stage = args.next().unwrap().parse()?;
+    let stage: Stage = args.next().or(Some("easy".into())).unwrap().parse()?;
 
     Ok(Args { day, stage })
 }
