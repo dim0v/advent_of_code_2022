@@ -3,7 +3,7 @@ use seq_macro::seq;
 
 mod common;
 
-seq!(N in 1..=6 {
+seq!(N in 1..=7 {
     
     #(
         mod day~N;
