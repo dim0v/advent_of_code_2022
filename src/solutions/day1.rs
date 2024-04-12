@@ -1,6 +1,6 @@
 use crate::Stage;
 
-pub fn solve(stage: Stage, input: Vec<String>) -> i64 {
+pub fn solve(stage: Stage, input: Vec<String>) -> String {
     let mut sums = Vec::<i64>::new();
     let mut current_sum = 0i64;
 
@@ -13,11 +13,16 @@ pub fn solve(stage: Stage, input: Vec<String>) -> i64 {
         current_sum += row.parse::<i64>().unwrap();
     }
     sums.push(current_sum);
-    
+
     sums.sort_by_key(|x| -(*x));
-    
-    return sums.iter().take(match stage {
-        Stage::Easy => {1}
-        Stage::Hard => {3}
-    }).sum();
+
+    let result: i64 = sums
+        .iter()
+        .take(match stage {
+            Stage::Easy => 1,
+            Stage::Hard => 3,
+        })
+        .sum();
+
+    result.to_string()
 }

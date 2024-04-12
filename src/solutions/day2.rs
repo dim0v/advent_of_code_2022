@@ -3,7 +3,7 @@ use crate::Stage;
 use anyhow::anyhow;
 use std::str::FromStr;
 
-pub fn solve(stage: Stage, input: Vec<String>) -> i64 {
+pub fn solve(stage: Stage, input: Vec<String>) -> String {
     let mut rounds = Vec::from_iter(input.iter().map(|v| v.parse::<Round>().unwrap()));
 
     if stage.is_hard() {
@@ -12,7 +12,8 @@ pub fn solve(stage: Stage, input: Vec<String>) -> i64 {
         }
     }
 
-    rounds.iter().map(|x| x.get_full_score()).sum()
+    let result: i64 = rounds.iter().map(|x| x.get_full_score()).sum();
+    result.to_string()
 }
 
 #[derive(Copy, Clone)]
@@ -30,9 +31,9 @@ struct Round {
 impl MoveType {
     fn get_score(&self) -> i64 {
         match *self {
-            MoveType::Rock => 1,
-            MoveType::Paper => 2,
-            MoveType::Scissors => 3,
+            Rock => 1,
+            Paper => 2,
+            Scissors => 3,
         }
     }
 }
@@ -64,9 +65,9 @@ impl FromStr for MoveType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "A" | "X" => Ok(MoveType::Rock),
-            "B" | "Y" => Ok(MoveType::Paper),
-            "C" | "Z" => Ok(MoveType::Scissors),
+            "A" | "X" => Ok(Rock),
+            "B" | "Y" => Ok(Paper),
+            "C" | "Z" => Ok(Scissors),
             &_ => Err(anyhow!("Couldn't parse move")),
         }
     }

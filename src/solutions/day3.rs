@@ -2,7 +2,7 @@ use crate::Stage;
 use std::collections::HashSet;
 use std::hash::RandomState;
 
-pub fn solve(stage: Stage, input: Vec<String>) -> i64 {
+pub fn solve(stage: Stage, input: Vec<String>) -> String {
     let src = input.iter().map(|x| x.as_str());
 
     let src: Vec<char> = match stage {
@@ -17,7 +17,9 @@ pub fn solve(stage: Stage, input: Vec<String>) -> i64 {
             .collect(),
     };
 
-    src.iter().map(get_priority).sum()
+    let result: i64 = src.iter().map(get_priority).sum();
+    
+    result.to_string()
 }
 
 fn split_in_halves(row: &str) -> [&str; 2] {

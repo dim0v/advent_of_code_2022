@@ -3,13 +3,15 @@ use std::error::Error;
 use std::ops::RangeInclusive;
 use std::str::FromStr;
 
-pub fn solve(stage: Stage, input: Vec<String>) -> i64 {
+pub fn solve(stage: Stage, input: Vec<String>) -> String {
     let pairs = input.iter().map(|x| x.parse().unwrap());
 
-    pairs.filter(|x: &JobPair| match stage {
+    let result = pairs.filter(|x: &JobPair| match stage {
         Stage::Easy => x.is_full_overlap(),
         Stage::Hard => x.is_any_overlap()
-    }).count() as i64
+    }).count();
+    
+    result.to_string()
 }
 
 struct JobPair {
