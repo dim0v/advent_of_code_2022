@@ -1,7 +1,7 @@
 use seq_macro::seq;
 use crate::Stage;
 
-seq!(N in 1..=8 {
+seq!(N in 1..=9 {
     
     #(
         mod day~N;
