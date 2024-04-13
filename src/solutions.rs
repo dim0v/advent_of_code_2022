@@ -1,9 +1,7 @@
-use common::SolverFunc;
 use seq_macro::seq;
+use crate::Stage;
 
-mod common;
-
-seq!(N in 1..=7 {
+seq!(N in 1..=8 {
     
     #(
         mod day~N;
@@ -17,14 +15,12 @@ seq!(N in 1..=7 {
             _ => panic!("Invalid day"),
         }
     }
+    
+    pub static INPUTS: &[&str] = &[
+        #(
+        include_str!(concat!("../inputs/day", stringify!(N), ".txt")),
+        )*
+    ];
 });
 
-pub static INPUTS: &[&str] = &[
-    include_str!("../inputs/day1.txt"),
-    include_str!("../inputs/day2.txt"),
-    include_str!("../inputs/day3.txt"),
-    include_str!("../inputs/day4.txt"),
-    include_str!("../inputs/day5.txt"),
-    include_str!("../inputs/day6.txt"),
-    include_str!("../inputs/day7.txt"),
-];
+pub type SolverFunc = fn(stage: Stage, input: &Vec<&str>) -> String;

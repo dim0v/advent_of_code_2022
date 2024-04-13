@@ -1,3 +1,4 @@
+use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
 use solutions::INPUTS;
 
@@ -9,10 +10,16 @@ pub fn process_input(day: u8) -> Vec<&'static str> {
     data.split('\n').collect()
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Stage {
     Easy = 0,
     Hard = 1,
+}
+
+impl Display for Stage {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        (&self as &dyn Debug).fmt(f)
+    }
 }
 
 impl Stage {
