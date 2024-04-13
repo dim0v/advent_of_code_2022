@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{black_box, Criterion, criterion_group, criterion_main};
 use lazy_static::lazy_static;
 
-use advent_of_code_2022::solutions::get_solver_for_day;
+use advent_of_code_2022::solutions::{get_solver_for_day, N_DAYS};
 use advent_of_code_2022::{process_input, Stage};
-
-const N_DAYS: u8 = 8;
 
 fn bench_total(c: &mut Criterion) {
     c.bench_function("Full Advent", |b| {
