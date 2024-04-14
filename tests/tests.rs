@@ -13,9 +13,10 @@ static ANSWERS: &[[&str; 2]] = &[
     ["1908462", "3979145"],
     ["1719", "590824"],
     ["5779", "2331"],
+    ["14320", ""],
 ];
 
-seq!(N in 1..=8 {
+seq!(N in 1..=10 {
     #[test]
     fn easy_day~N() {
         assert_eq!(ANSWERS[N - 1][0], compute_answer(N, Stage::Easy));
