@@ -1,3 +1,4 @@
+use std::iter;
 use std::str::FromStr;
 
 use anyhow::anyhow;
@@ -5,14 +6,40 @@ use anyhow::anyhow;
 use crate::Stage;
 
 pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
+    match stage {
+        Stage::Easy => solve_easy(input),
+        Stage::Hard => solve_hard(input),
+    }
+}
+
+fn solve_hard(input: &[&str]) -> String {
+    let mut vm = Vm::new();
+    let mut screen = String::new();
+
+    for (state, i_pixel) in vm.execute_program(input).zip(0..) {
+        let coord = i_pixel % 40;
+        screen.push(if (state.x - coord).abs() < 2 {
+            '▉'
+        } else {
+            ' '
+        });
+        if coord == 39 {
+            screen.push('\n')
+        }
+    }
+
+    screen
+}
+
+fn solve_easy(input: &[&str]) -> String {
     let mut vm = Vm::new();
 
     let total_strength: i64 = vm
         .execute_program(input)
         .enumerate()
-        .skip(18)
+        .skip(19)
         .step_by(40)
-        .map(|(i, st)| ((i + 2) as i64) * st.x)
+        .map(|(i, st)| ((i + 1) as i64) * st.x)
         .sum();
 
     total_strength.to_string()
@@ -87,12 +114,11 @@ struct VmExecutionIterator<'a> {
 
 impl<'a> VmExecutionIterator<'a> {
     fn new(vm: &'a mut Vm, program: &[&str]) -> VmExecutionIterator<'a> {
-        let program: Vec<Instruction> = program.iter().map(|x| x.parse().unwrap()).collect();
+        let program: Vec<Instruction> = iter::once(Instruction::Noop)
+            .chain(program.iter().map(|x| x.parse().unwrap()))
+            .collect();
 
-        let delay = match program.get(0) {
-            None => 0,
-            Some(instr) => instr.get_delay(),
-        };
+        let delay = program[0].get_delay();
 
         VmExecutionIterator {
             vm,
@@ -128,4 +154,3 @@ impl<'a> Iterator for VmExecutionIterator<'a> {
         Some(self.vm.state)
     }
 }
-
