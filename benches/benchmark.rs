@@ -18,7 +18,7 @@ fn bench_total(c: &mut Criterion) {
 
     for i in 1..=N_DAYS {
         for stage in [Stage::Easy, Stage::Hard] {
-            let id = format!("Day {} - {}", i, stage);
+            let id = format!("Day {:02} - {}", i, stage);
             c.bench_function(&*id, |b| {
                 b.iter(|| {
                     black_box(compute_answer(i, stage));
