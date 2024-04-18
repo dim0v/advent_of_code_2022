@@ -1,12 +1,12 @@
 use std::cmp::{max, min};
-use std::collections::BTreeSet;
 use std::ops::RangeInclusive;
 
 use itertools::Itertools;
 
 use crate::Stage;
 
-type Map = Vec<BTreeSet<isize>>;
+type Map = Vec<RangeSet>;
+type MyRange = (isize, isize);
 
 pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
     let height_offset = 2;
@@ -29,7 +29,7 @@ fn add_floor(map: &mut Map, target_h: isize) {
     }
 }
 
-fn sim_sand_fall(map: &mut Map, spawn_point: (isize, isize)) -> isize {
+fn sim_sand_fall(map: &mut Map, spawn_point: MyRange) -> isize {
     let mut cnt = 0;
 
     'outer: loop {
@@ -48,14 +48,14 @@ fn sim_sand_fall(map: &mut Map, spawn_point: (isize, isize)) -> isize {
 
             let col = maybe_col.unwrap();
 
-            let maybe_stop = col.range(spawn_height..).next();
+            let maybe_stop = get_next_stop(col, spawn_height);
 
             if let None = maybe_stop {
                 // no ground below, time to stop
                 break 'outer;
             }
 
-            stop = *maybe_stop.unwrap();
+            stop = maybe_stop.unwrap();
             spawn_height = stop;
             if is_empty(&map, spawn_col - 1, spawn_height) {
                 spawn_col -= 1;
@@ -71,19 +71,62 @@ fn sim_sand_fall(map: &mut Map, spawn_point: (isize, isize)) -> isize {
         cnt += 1
     }
 
+    fn is_empty_1(map: &Map, col: isize, height: isize) -> bool {
+        if col < 0 || col >= map.len() as isize {
+            return true;
+        }
+        let (left, right, _) = map[col as usize].get_overlaps(height);
+
+        left.is_none() && right.is_none()
+    }
+
     fn is_empty(map: &Map, col: isize, height: isize) -> bool {
-        return if col >= 0 && col < map.len() as isize {
-            !map[col as usize].contains(&height)
-        } else {
-            true
-        };
+        if col < 0 || col >= map.len() as isize {
+            return true;
+        }
+        let ranges = &map[col as usize].ranges;
+        for range in ranges {
+            if range.0 <= height {
+                if range.1 >= height {
+                    return false;
+                }
+            } else {
+                break;
+            }
+        }
+
+        true
+    }
+
+    fn get_next_stop_1(col: &RangeSet, start: isize) -> Option<isize> {
+        let res = col.ranges.binary_search(&(start, start));
+        match res {
+            Ok(_) => None,
+            Err(pos) => {
+                if pos < col.ranges.len() {
+                    Some(col.ranges[pos].0)
+                } else {
+                    None
+                }
+            }
+        }
+    }
+
+    fn get_next_stop(col: &RangeSet, start: isize) -> Option<isize> {
+        for (s, _) in &col.ranges {
+            if *s > start {
+                return Some(*s);
+            }
+        }
+
+        None
     }
 
     cnt
 }
 
 fn load_base_map(input: &[&str], base_col_offset: isize, height_offset: isize) -> ProblemInput {
-    let paths: Vec<Vec<(isize, isize)>> = input
+    let paths: Vec<Vec<MyRange>> = input
         .iter()
         .map(|row| {
             row.split(" -> ")
@@ -105,8 +148,11 @@ fn load_base_map(input: &[&str], base_col_offset: isize, height_offset: isize) -
     let min_col = min(*min_col, base_col_offset - (height_offset + max_h));
     let max_col = max(*max_col, base_col_offset + (height_offset + max_h));
 
-    let mut map: Map = Vec::new();
-    map.resize((max_col - min_col + 1) as usize, BTreeSet::default());
+    let capacity = (max_col - min_col + 1) as usize;
+    let mut map: Map = Vec::with_capacity(capacity);
+    for _ in 0..capacity {
+        map.push(RangeSet::new());
+    }
 
     for path in paths {
         for pair in path.windows(2) {
@@ -114,18 +160,23 @@ fn load_base_map(input: &[&str], base_col_offset: isize, height_offset: isize) -
             start.0 -= min_col;
             end.0 -= min_col;
 
-            let diff: (isize, isize) = (end.0.cmp(&start.0) as isize, end.1.cmp(&start.1) as isize);
+            let diff: MyRange = (end.0.cmp(&start.0) as isize, end.1.cmp(&start.1) as isize);
             let mut curr = start;
 
-            loop {
+            if diff.0 == 0 {
                 let col: &mut _ = &mut map[curr.0 as usize];
-                col.insert(curr.1);
+                col.insert_range((start.1, end.1));
+            } else {
+                loop {
+                    let col: &mut _ = &mut map[curr.0 as usize];
+                    col.insert(curr.1);
 
-                if curr == end {
-                    break;
+                    if curr == end {
+                        break;
+                    }
+                    curr.0 += diff.0;
+                    curr.1 += diff.1;
                 }
-                curr.0 += diff.0;
-                curr.1 += diff.1;
             }
         }
     }
@@ -141,4 +192,79 @@ struct ProblemInput {
     map: Map,
     col_offset: isize,
     row_range: RangeInclusive<isize>,
+}
+
+struct RangeSet {
+    ranges: Vec<MyRange>,
+}
+
+impl RangeSet {
+    fn new() -> RangeSet {
+        RangeSet { ranges: Vec::new() }
+    }
+
+    fn insert(&mut self, v: isize) {
+        self.insert_range((v, v));
+    }
+
+    fn get_overlaps(&self, v: isize) -> (Option<usize>, Option<usize>, usize) {
+        self.get_overlaps_range((v, v))
+    }
+
+    fn get_overlaps_range(&self, range: MyRange) -> (Option<usize>, Option<usize>, usize) {
+        let pos = self.ranges.binary_search(&range);
+        match pos {
+            Ok(pos) => (Some(pos), Some(pos), pos),
+            Err(pos) => {
+                let mut left: Option<usize> = None;
+                let mut right: Option<usize> = None;
+
+                if pos > 0 {
+                    let prev_range = &self.ranges[pos - 1];
+                    if prev_range.1 >= range.0 {
+                        left = Some(pos - 1)
+                    }
+                }
+
+                if pos < self.ranges.len() {
+                    let next_range = &self.ranges[pos];
+                    if next_range.0 <= range.1 {
+                        right = Some(pos)
+                    }
+                }
+
+                (left, right, pos)
+            }
+        }
+    }
+
+    fn insert_range(&mut self, range: MyRange) {
+        if range.0 > range.1 {
+            self.insert_range((range.1, range.0));
+            return;
+        }
+
+        let (left, right, pos) = self.get_overlaps_range(range);
+
+        if left.is_none() && right.is_none() {
+            self.ranges.insert(pos, range);
+            return;
+        }
+        if left.is_some() && right.is_some() {
+            if left == right {
+                return;
+            }
+            self.ranges[left.unwrap()].1 = self.ranges[right.unwrap()].1;
+            self.ranges.remove(right.unwrap());
+            return;
+        }
+        if left.is_some() {
+            self.ranges[left.unwrap()].1 = max(range.1, self.ranges[left.unwrap()].1);
+            return;
+        }
+        if right.is_some() {
+            self.ranges[right.unwrap()].0 = min(range.0, self.ranges[right.unwrap()].0);
+            return;
+        }
+    }
 }
