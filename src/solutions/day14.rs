@@ -71,15 +71,6 @@ fn sim_sand_fall(map: &mut Map, spawn_point: MyRange) -> isize {
         cnt += 1
     }
 
-    fn is_empty_1(map: &Map, col: isize, height: isize) -> bool {
-        if col < 0 || col >= map.len() as isize {
-            return true;
-        }
-        let (left, right, _) = map[col as usize].get_overlaps(height);
-
-        left.is_none() && right.is_none()
-    }
-
     fn is_empty(map: &Map, col: isize, height: isize) -> bool {
         if col < 0 || col >= map.len() as isize {
             return true;
@@ -96,20 +87,6 @@ fn sim_sand_fall(map: &mut Map, spawn_point: MyRange) -> isize {
         }
 
         true
-    }
-
-    fn get_next_stop_1(col: &RangeSet, start: isize) -> Option<isize> {
-        let res = col.ranges.binary_search(&(start, start));
-        match res {
-            Ok(_) => None,
-            Err(pos) => {
-                if pos < col.ranges.len() {
-                    Some(col.ranges[pos].0)
-                } else {
-                    None
-                }
-            }
-        }
     }
 
     fn get_next_stop(col: &RangeSet, start: isize) -> Option<isize> {
@@ -205,10 +182,6 @@ impl RangeSet {
 
     fn insert(&mut self, v: isize) {
         self.insert_range((v, v));
-    }
-
-    fn get_overlaps(&self, v: isize) -> (Option<usize>, Option<usize>, usize) {
-        self.get_overlaps_range((v, v))
     }
 
     fn get_overlaps_range(&self, range: MyRange) -> (Option<usize>, Option<usize>, usize) {
