@@ -177,7 +177,7 @@ struct RangeSet {
 
 impl RangeSet {
     fn new() -> RangeSet {
-        RangeSet { ranges: Vec::new() }
+        RangeSet { ranges: Vec::with_capacity(4) }
     }
 
     fn insert(&mut self, v: isize) {
