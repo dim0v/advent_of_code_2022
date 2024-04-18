@@ -1,10 +1,11 @@
 use std::collections::{BTreeSet, HashMap};
 
+use ahash::RandomState;
 use itertools::Itertools;
 
 use crate::Stage;
 
-type Map = HashMap<isize, BTreeSet<isize>>;
+type Map = HashMap<isize, BTreeSet<isize>, RandomState>;
 
 pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
     let mut map = load_base_map(input);
@@ -80,7 +81,7 @@ fn sim_sand_fall(map: &mut Map, spawn_point: (isize, isize)) -> usize {
 }
 
 fn load_base_map(input: &[&str]) -> Map {
-    let mut map: Map = HashMap::new();
+    let mut map: Map = HashMap::with_hasher(RandomState::new());
 
     for row in input {
         let path = row.split(" -> ").map(|c| {

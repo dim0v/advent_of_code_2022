@@ -9,6 +9,7 @@ edition = "2021"
 anyhow = "1.0.82"
 seq-macro = "0.3.5"
 itertools = "0.10.5"
+ahash = "0.8.11"
 
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["stable"] }
