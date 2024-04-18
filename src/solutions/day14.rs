@@ -1,33 +1,35 @@
-use std::collections::{BTreeSet, HashMap};
+use std::cmp::{max, min};
+use std::collections::BTreeSet;
+use std::ops::RangeInclusive;
 
-use ahash::RandomState;
 use itertools::Itertools;
 
 use crate::Stage;
 
-type Map = HashMap<isize, BTreeSet<isize>, RandomState>;
+type Map = Vec<BTreeSet<isize>>;
 
 pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
-    let mut map = load_base_map(input);
-    let col_offset = 500;
+    let height_offset = 2;
+    let ProblemInput {
+        mut map,
+        col_offset,
+        row_range,
+    } = load_base_map(input, 500, height_offset);
 
     if stage.is_hard() {
-        add_floor(&mut map, col_offset);
+        add_floor(&mut map, row_range.end() + height_offset);
     }
 
     sim_sand_fall(&mut map, (col_offset, 0)).to_string()
 }
 
-fn add_floor(map: &mut Map, offset: isize) {
-    let max_h = map.values().map(|col| col.last().unwrap()).max().unwrap();
-    let target_h = max_h + 2;
-
-    for i_col in (offset - target_h)..=(offset + target_h) {
-        map.entry(i_col).or_default().insert(target_h);
+fn add_floor(map: &mut Map, target_h: isize) {
+    for col in map {
+        col.insert(target_h);
     }
 }
 
-fn sim_sand_fall(map: &mut Map, spawn_point: (isize, isize)) -> usize {
+fn sim_sand_fall(map: &mut Map, spawn_point: (isize, isize)) -> isize {
     let mut cnt = 0;
 
     'outer: loop {
@@ -38,7 +40,7 @@ fn sim_sand_fall(map: &mut Map, spawn_point: (isize, isize)) -> usize {
 
         let mut stop: isize;
         loop {
-            let maybe_col = map.get_mut(&spawn_col);
+            let maybe_col = map.get_mut(spawn_col as usize);
             if let None = maybe_col {
                 // empty column reached, time to stop
                 break 'outer;
@@ -64,38 +66,59 @@ fn sim_sand_fall(map: &mut Map, spawn_point: (isize, isize)) -> usize {
             }
         }
 
-        map.get_mut(&spawn_col).unwrap().insert(stop - 1);
+        map[spawn_col as usize].insert(stop - 1);
 
         cnt += 1
     }
 
     fn is_empty(map: &Map, col: isize, height: isize) -> bool {
-        if let Some(col) = map.get(&col) {
-            return !col.contains(&height);
-        }
-
-        true
+        return if col >= 0 && col < map.len() as isize {
+            !map[col as usize].contains(&height)
+        } else {
+            true
+        };
     }
 
     cnt
 }
 
-fn load_base_map(input: &[&str]) -> Map {
-    let mut map: Map = HashMap::with_hasher(RandomState::new());
+fn load_base_map(input: &[&str], base_col_offset: isize, height_offset: isize) -> ProblemInput {
+    let paths: Vec<Vec<(isize, isize)>> = input
+        .iter()
+        .map(|row| {
+            row.split(" -> ")
+                .map(|c| {
+                    c.split(',')
+                        .map(|s| s.parse().unwrap())
+                        .tuples()
+                        .next()
+                        .unwrap()
+                })
+                .collect()
+        })
+        .collect();
 
-    for row in input {
-        let path = row.split(" -> ").map(|c| {
-            c.split(',')
-                .map(|s| s.parse::<isize>().unwrap())
-                .tuples::<(isize, isize)>()
-                .next()
-                .unwrap()
-        });
-        for (start, end) in path.tuple_windows() {
+    let max_h = *paths.iter().flatten().map(|(_, h)| h).max().unwrap();
+    let min_col = paths.iter().flatten().map(|(c, _)| c).min().unwrap();
+    let max_col = paths.iter().flatten().map(|(c, _)| c).max().unwrap();
+
+    let min_col = min(*min_col, base_col_offset - (height_offset + max_h));
+    let max_col = max(*max_col, base_col_offset + (height_offset + max_h));
+
+    let mut map: Map = Vec::new();
+    map.resize((max_col - min_col + 1) as usize, BTreeSet::default());
+
+    for path in paths {
+        for pair in path.windows(2) {
+            let [mut start, mut end] = pair else { panic!() };
+            start.0 -= min_col;
+            end.0 -= min_col;
+
             let diff: (isize, isize) = (end.0.cmp(&start.0) as isize, end.1.cmp(&start.1) as isize);
             let mut curr = start;
+
             loop {
-                let col: &mut _ = map.entry(curr.0).or_default();
+                let col: &mut _ = &mut map[curr.0 as usize];
                 col.insert(curr.1);
 
                 if curr == end {
@@ -107,5 +130,15 @@ fn load_base_map(input: &[&str]) -> Map {
         }
     }
 
-    map
+    ProblemInput {
+        map,
+        col_offset: base_col_offset - min_col,
+        row_range: 0..=max_h,
+    }
+}
+
+struct ProblemInput {
+    map: Map,
+    col_offset: isize,
+    row_range: RangeInclusive<isize>,
 }
