@@ -17,7 +17,7 @@ pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
 
     match stage {
         Stage::Easy => solve_easy(&sensors, &beacons),
-        Stage::Hard => solve_hard(&sensors, &beacons),
+        Stage::Hard => solve_hard(&sensors),
     }
     .to_string()
 }
@@ -26,17 +26,26 @@ fn solve_easy(sensors: &[Sensor], beacons: &[Point2]) -> usize {
     let mut range_set = RangeSet::with_capacity(sensors.len());
 
     const TARGET_ROW: isize = 2000000;
-    count_row(&mut range_set, &sensors, &beacons, TARGET_ROW)
+
+    fill_range_set_for_row(&mut range_set, sensors, TARGET_ROW);
+
+    let cnt: usize = range_set.ranges().iter().map(|r| r.count()).sum();
+    let intersecting_beacons = beacons
+        .iter()
+        .filter(|b| b.y == TARGET_ROW && range_set.contains(b.x))
+        .count();
+
+    cnt - intersecting_beacons
 }
 
-fn solve_hard(sensors: &[Sensor], beacons: &[Point2]) -> usize {
+fn solve_hard(sensors: &[Sensor]) -> usize {
     const POS_MAX: isize = 4000000;
     const X_MUL: isize = 4000000;
     let mut range_set = RangeSet::with_capacity(sensors.len());
 
     // a dirty trick to halve the execution time :D
     for row in (0..=POS_MAX).rev() {
-        count_row(&mut range_set, &sensors, &beacons, row);
+        fill_range_set_for_row(&mut range_set, &sensors, row);
         for range in range_set.ranges() {
             if range.to >= 0 && range.to < POS_MAX {
                 return (X_MUL * (range.to + 1) + row) as usize;
@@ -47,12 +56,7 @@ fn solve_hard(sensors: &[Sensor], beacons: &[Point2]) -> usize {
     0
 }
 
-fn count_row(
-    range_set: &mut RangeSet,
-    sensors: &[Sensor],
-    beacons: &[Point2],
-    row: isize,
-) -> usize {
+fn fill_range_set_for_row(range_set: &mut RangeSet, sensors: &[Sensor], row: isize) {
     range_set.clear();
 
     for sensor in sensors {
@@ -63,14 +67,6 @@ fn count_row(
             range_set.insert((sensor.pos.x - row_range, sensor.pos.x + row_range).into())
         }
     }
-
-    let cnt: usize = range_set.ranges().iter().map(|r| r.count()).sum();
-    let intersecting_beacons = beacons
-        .iter()
-        .filter(|b| b.y == row && range_set.contains(b.x))
-        .count();
-
-    cnt - intersecting_beacons
 }
 
 fn parse_row(row: &&str) -> (Sensor, Point2) {
