@@ -25,6 +25,6 @@ seq!(N in 1..=15 {
     ];
 });
 
-pub type SolverFunc = fn(stage: Stage, input: &Vec<&str>) -> String;
+pub type SolverFunc = fn(stage: Stage, input: &str) -> String;
 
 pub static N_DAYS: u8 = INPUTS.len() as u8;

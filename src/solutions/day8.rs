@@ -3,10 +3,12 @@ use std::iter;
 
 use crate::Stage;
 
-pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
+pub fn solve(stage: Stage, input: &str) -> String {
+    let tree_map: Vec<_> = input.lines().collect();
+    
     match stage {
-        Stage::Easy => count_visible(input),
-        Stage::Hard => find_best_spot(input),
+        Stage::Easy => count_visible(&tree_map),
+        Stage::Hard => find_best_spot(&tree_map),
     }
     .to_string()
 }

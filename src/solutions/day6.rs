@@ -1,8 +1,6 @@
 use crate::Stage;
 
-pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
-    let input = &input[0];
-
+pub fn solve(stage: Stage, input: &str) -> String {
     find_sop_marker(
         input,
         match stage {

@@ -1,6 +1,6 @@
 use seq_macro::seq;
 
-use advent_of_code_2022::solutions::get_solver_for_day;
+use advent_of_code_2022::solutions::{get_solver_for_day, INPUTS};
 use advent_of_code_2022::*;
 
 static ANSWERS: &[[&str; 2]] = &[
@@ -53,5 +53,5 @@ seq!(N in 1..=25 {
 
 #[ignore]
 fn compute_answer(day: u8, stage: Stage) -> String {
-    get_solver_for_day(day)(stage, &process_input(day))
+    get_solver_for_day(day)(stage, INPUTS[(day - 1) as usize])
 }

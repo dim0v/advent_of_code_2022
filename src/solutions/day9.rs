@@ -9,7 +9,7 @@ use seq_macro::seq;
 use crate::solutions::day9::Direction::{Down, Left, Right, Up};
 use crate::Stage;
 
-pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
+pub fn solve(stage: Stage, input: &str) -> String {
     let mut rope = Rope::new(match stage {
         Stage::Easy => 2,
         Stage::Hard => 10,
@@ -17,7 +17,7 @@ pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
     let mut visited: HashSet<(i32, i32)> = HashSet::new();
     visited.insert(*rope.get_tail_position());
 
-    for row in input {
+    for row in input.lines() {
         let (dir, cnt) = row.split_at(1);
 
         let dir: Direction = dir.parse().unwrap();

@@ -6,9 +6,9 @@ use std::cmp::Ordering;
 use std::cmp::Ordering::Equal;
 use std::str::FromStr;
 
-pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
+pub fn solve(stage: Stage, input: &str) -> String {
     let mut parsed: Vec<Node> = input
-        .iter()
+        .lines()
         .filter_map(|r| {
             if r.len() > 0 {
                 Some(r.parse().unwrap())

@@ -4,8 +4,9 @@ use std::iter;
 
 use crate::Stage;
 
-pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
-    let (full, nearest) = bfs(input);
+pub fn solve(stage: Stage, input: &str) -> String {
+    let map: Vec<_> = input.lines().collect();
+    let (full, nearest) = bfs(&map);
 
     (match stage {
         Stage::Easy => full,

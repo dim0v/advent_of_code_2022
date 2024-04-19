@@ -1,10 +1,10 @@
 use crate::Stage;
 
-pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
+pub fn solve(stage: Stage, input: &str) -> String {
     let mut sums = Vec::<i64>::new();
     let mut current_sum = 0i64;
 
-    for row in input {
+    for row in input.lines() {
         if row.len() == 0 {
             sums.push(current_sum);
             current_sum = 0;

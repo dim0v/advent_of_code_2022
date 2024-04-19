@@ -5,14 +5,14 @@ use anyhow::anyhow;
 
 use crate::Stage;
 
-pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
+pub fn solve(stage: Stage, input: &str) -> String {
     match stage {
         Stage::Easy => solve_easy(input),
         Stage::Hard => solve_hard(input),
     }
 }
 
-fn solve_hard(input: &[&str]) -> String {
+fn solve_hard(input: &str) -> String {
     let mut vm = Vm::new();
     let mut screen = String::new();
 
@@ -31,7 +31,7 @@ fn solve_hard(input: &[&str]) -> String {
     screen
 }
 
-fn solve_easy(input: &[&str]) -> String {
+fn solve_easy(input: &str) -> String {
     let mut vm = Vm::new();
 
     let total_strength: i64 = vm
@@ -68,7 +68,7 @@ impl Vm {
         }
     }
 
-    fn execute_program(&mut self, program: &[&str]) -> VmExecutionIterator {
+    fn execute_program(&mut self, program: &str) -> VmExecutionIterator {
         VmExecutionIterator::new(self, program)
     }
 }
@@ -113,9 +113,9 @@ struct VmExecutionIterator<'a> {
 }
 
 impl<'a> VmExecutionIterator<'a> {
-    fn new(vm: &'a mut Vm, program: &[&str]) -> VmExecutionIterator<'a> {
+    fn new(vm: &'a mut Vm, program: &str) -> VmExecutionIterator<'a> {
         let program: Vec<Instruction> = iter::once(Instruction::Noop)
-            .chain(program.iter().map(|x| x.parse().unwrap()))
+            .chain(program.lines().map(|x| x.parse().unwrap()))
             .collect();
 
         let delay = program[0].get_delay();

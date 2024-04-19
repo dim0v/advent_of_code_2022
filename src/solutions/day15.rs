@@ -5,8 +5,8 @@ use anyhow::anyhow;
 
 use crate::Stage;
 
-pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
-    let (sensors, beacons_src): (Vec<_>, Vec<_>) = input.iter().map(parse_row).unzip();
+pub fn solve(stage: Stage, input: &str) -> String {
+    let (sensors, beacons_src): (Vec<_>, Vec<_>) = input.lines().map(parse_row).unzip();
     let mut beacons: Vec<Point2> = Vec::with_capacity(beacons_src.len());
 
     for b in beacons_src {
@@ -69,7 +69,7 @@ fn fill_range_set_for_row(range_set: &mut RangeSet, sensors: &[Sensor], row: isi
     }
 }
 
-fn parse_row(row: &&str) -> (Sensor, Point2) {
+fn parse_row(row: &str) -> (Sensor, Point2) {
     let mut split = row.split(": ");
     let sensor_pos = split.next().unwrap()[10..].parse().unwrap();
     let beacon_pos = split.next().unwrap()[21..].parse().unwrap();

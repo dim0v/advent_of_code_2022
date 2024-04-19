@@ -1,14 +1,7 @@
 use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
-use solutions::INPUTS;
 
 pub mod solutions;
-
-pub fn process_input(day: u8) -> Vec<&'static str> {
-    let data = INPUTS[day as usize - 1];
-
-    data.split('\n').collect()
-}
 
 #[derive(Debug, Copy, Clone)]
 pub enum Stage {

@@ -6,7 +6,7 @@ use crate::Stage;
 
 type Map = Vec<RangeSet>;
 
-pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
+pub fn solve(stage: Stage, input: &str) -> String {
     let height_offset = 2;
     let ProblemInput {
         mut map,
@@ -100,9 +100,9 @@ fn sim_sand_fall(map: &mut Map, spawn_point: (isize, isize)) -> isize {
     cnt
 }
 
-fn load_base_map(input: &[&str], base_col_offset: isize, height_offset: isize) -> ProblemInput {
+fn load_base_map(input: &str, base_col_offset: isize, height_offset: isize) -> ProblemInput {
     let paths: Vec<Vec<MyRange>> = input
-        .iter()
+        .lines()
         .map(|row| {
             row.split(" -> ")
                 .map(|c| {

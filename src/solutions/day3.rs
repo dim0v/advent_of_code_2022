@@ -2,8 +2,8 @@ use crate::Stage;
 use std::collections::HashSet;
 use std::hash::RandomState;
 
-pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
-    let src = input.iter();
+pub fn solve(stage: Stage, input: &str) -> String {
+    let src = input.lines();
 
     let result: i64 = match stage {
         Stage::Easy => src
@@ -12,9 +12,9 @@ pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
             .map(|c| get_priority(c))
             .sum(),
         Stage::Hard => src
-            .collect::<Vec<&&str>>()
+            .collect::<Vec<&str>>()
             .chunks(3)
-            .map(|x| get_common_char(x.iter().map(|x| **x)))
+            .map(|x| get_common_char(x.iter().map(|x| *x)))
             .map(|c| get_priority(c))
             .sum(),
     };

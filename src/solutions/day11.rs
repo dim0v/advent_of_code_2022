@@ -2,12 +2,21 @@ use crate::Stage;
 use anyhow::anyhow;
 use std::str::FromStr;
 
-pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
-    let mut monkeys: Vec<_> = input.chunks(7).map(Monkey::from_description).collect();
+pub fn solve(stage: Stage, input: &str) -> String {
+    let mut monkeys: Vec<_> = input
+        .lines()
+        .collect::<Vec<_>>()
+        .chunks(7)
+        .map(Monkey::from_description)
+        .collect();
 
     let (iterations, relaxing_factor, modulus) = match stage {
         Stage::Easy => (20, 3, u64::MAX),
-        Stage::Hard => (10_000, 1, monkeys.iter().map(|m| m.divisibility_test).product())
+        Stage::Hard => (
+            10_000,
+            1,
+            monkeys.iter().map(|m| m.divisibility_test).product(),
+        ),
     };
 
     for _ in 0..iterations {
@@ -51,10 +60,16 @@ fn extract_monkeys(
     } else if m.target_idx[0] < i && m.target_idx[1] < i {
         extract_pair(left, target_idx_left[0], target_idx_left[1])
     } else if m.target_idx[0] < i && m.target_idx[1] > i {
-        (left.get_mut(target_idx_left[0]).unwrap(), right.get_mut(target_idx_right[1]).unwrap())
+        (
+            left.get_mut(target_idx_left[0]).unwrap(),
+            right.get_mut(target_idx_right[1]).unwrap(),
+        )
     } else if m.target_idx[0] > i && m.target_idx[1] < i {
-        (right.get_mut(target_idx_right[0]).unwrap(), left.get_mut(target_idx_left[1]).unwrap())
-    } else { 
+        (
+            right.get_mut(target_idx_right[0]).unwrap(),
+            left.get_mut(target_idx_left[1]).unwrap(),
+        )
+    } else {
         panic!("welp.. too bad")
     };
 
