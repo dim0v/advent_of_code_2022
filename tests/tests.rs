@@ -28,20 +28,30 @@ static ANSWERS: &[[&str; 2]] = &[
     ["481", "480"],
     ["4821", "21890"],
     ["1406", "20870"],
+    ["4582667", "10961118625406"],
 ];
 
 seq!(N in 1..=25 {
     #[test]
     fn easy_day~N() {
-        assert_eq!(ANSWERS[N - 1][0], compute_answer(N, Stage::Easy));
+        if N > ANSWERS.len() {
+            println!("Not solved yet, skipping");
+        } else {
+            assert_eq!(ANSWERS[N - 1][0], compute_answer(N, Stage::Easy));
+        }
     }
 
     #[test]
     fn hard_day~N() {
-        assert_eq!(ANSWERS[N - 1][1], compute_answer(N, Stage::Hard));
+        if N > ANSWERS.len() {
+            println!("Not solved yet, skipping");
+        } else {
+            assert_eq!(ANSWERS[N - 1][1], compute_answer(N, Stage::Hard));
+        }
     }
 });
 
+#[ignore]
 fn compute_answer(day: u8, stage: Stage) -> String {
     get_solver_for_day(day)(stage, &process_input(day))
 }

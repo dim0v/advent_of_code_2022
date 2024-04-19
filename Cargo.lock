@@ -24,7 +24,6 @@ dependencies = [
  "ahash",
  "anyhow",
  "criterion",
- "itertools",
  "lazy_static",
  "seq-macro",
 ]

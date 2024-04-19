@@ -1,12 +1,10 @@
 use std::cmp::{max, min};
 use std::ops::RangeInclusive;
 
-use itertools::Itertools;
-
+use crate::solutions::common::{MyRange, RangeSet};
 use crate::Stage;
 
 type Map = Vec<RangeSet>;
-type MyRange = (isize, isize);
 
 pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
     let height_offset = 2;
@@ -25,11 +23,11 @@ pub fn solve(stage: Stage, input: &Vec<&str>) -> String {
 
 fn add_floor(map: &mut Map, target_h: isize) {
     for col in map {
-        col.insert(target_h);
+        col.insert(target_h.into());
     }
 }
 
-fn sim_sand_fall(map: &mut Map, spawn_point: MyRange) -> isize {
+fn sim_sand_fall(map: &mut Map, spawn_point: (isize, isize)) -> isize {
     let mut cnt = 0;
 
     'outer: loop {
@@ -66,7 +64,7 @@ fn sim_sand_fall(map: &mut Map, spawn_point: MyRange) -> isize {
             }
         }
 
-        map[spawn_col as usize].insert(stop - 1);
+        map[spawn_col as usize].insert((stop - 1).into());
 
         cnt += 1
     }
@@ -75,10 +73,10 @@ fn sim_sand_fall(map: &mut Map, spawn_point: MyRange) -> isize {
         if col < 0 || col >= map.len() as isize {
             return true;
         }
-        let ranges = &map[col as usize].ranges;
+        let ranges = map[col as usize].ranges();
         for range in ranges {
-            if range.0 <= height {
-                if range.1 >= height {
+            if range.from <= height {
+                if range.to >= height {
                     return false;
                 }
             } else {
@@ -90,9 +88,9 @@ fn sim_sand_fall(map: &mut Map, spawn_point: MyRange) -> isize {
     }
 
     fn get_next_stop(col: &RangeSet, start: isize) -> Option<isize> {
-        for (s, _) in &col.ranges {
-            if *s > start {
-                return Some(*s);
+        for r in col.ranges() {
+            if r.from > start {
+                return Some(r.from);
             }
         }
 
@@ -108,51 +106,49 @@ fn load_base_map(input: &[&str], base_col_offset: isize, height_offset: isize) -
         .map(|row| {
             row.split(" -> ")
                 .map(|c| {
-                    c.split(',')
-                        .map(|s| s.parse().unwrap())
-                        .tuples()
-                        .next()
-                        .unwrap()
+                    let mut split = c.split(',').map(|s| s.parse().unwrap());
+                    
+                    MyRange::from((split.next().unwrap(), split.next().unwrap()))
                 })
                 .collect()
         })
         .collect();
 
-    let max_h = *paths.iter().flatten().map(|(_, h)| h).max().unwrap();
-    let min_col = paths.iter().flatten().map(|(c, _)| c).min().unwrap();
-    let max_col = paths.iter().flatten().map(|(c, _)| c).max().unwrap();
+    let max_h = paths.iter().flatten().map(|r| r.to).max().unwrap();
+    let min_col = paths.iter().flatten().map(|r| r.from).min().unwrap();
+    let max_col = paths.iter().flatten().map(|r| r.from).max().unwrap();
 
-    let min_col = min(*min_col, base_col_offset - (height_offset + max_h));
-    let max_col = max(*max_col, base_col_offset + (height_offset + max_h));
+    let min_col = min(min_col, base_col_offset - (height_offset + max_h));
+    let max_col = max(max_col, base_col_offset + (height_offset + max_h));
 
     let capacity = (max_col - min_col + 1) as usize;
     let mut map: Map = Vec::with_capacity(capacity);
     for _ in 0..capacity {
-        map.push(RangeSet::new());
+        map.push(RangeSet::with_capacity(4));
     }
 
     for path in paths {
         for pair in path.windows(2) {
             let [mut start, mut end] = pair else { panic!() };
-            start.0 -= min_col;
-            end.0 -= min_col;
+            start.from -= min_col;
+            end.from -= min_col;
 
-            let diff: MyRange = (end.0.cmp(&start.0) as isize, end.1.cmp(&start.1) as isize);
+            let diff = (end.from.cmp(&start.from) as isize, end.to.cmp(&start.to) as isize);
             let mut curr = start;
 
             if diff.0 == 0 {
-                let col: &mut _ = &mut map[curr.0 as usize];
-                col.insert_range((start.1, end.1));
+                let col: &mut _ = &mut map[curr.from as usize];
+                col.insert((start.to, end.to).into());
             } else {
                 loop {
-                    let col: &mut _ = &mut map[curr.0 as usize];
-                    col.insert(curr.1);
+                    let col: &mut _ = &mut map[curr.from as usize];
+                    col.insert(curr.to.into());
 
                     if curr == end {
                         break;
                     }
-                    curr.0 += diff.0;
-                    curr.1 += diff.1;
+                    curr.from += diff.0;
+                    curr.to += diff.1;
                 }
             }
         }
@@ -169,75 +165,4 @@ struct ProblemInput {
     map: Map,
     col_offset: isize,
     row_range: RangeInclusive<isize>,
-}
-
-struct RangeSet {
-    ranges: Vec<MyRange>,
-}
-
-impl RangeSet {
-    fn new() -> RangeSet {
-        RangeSet { ranges: Vec::with_capacity(4) }
-    }
-
-    fn insert(&mut self, v: isize) {
-        self.insert_range((v, v));
-    }
-
-    fn get_overlaps_range(&self, range: MyRange) -> (Option<usize>, Option<usize>, usize) {
-        let pos = self.ranges.binary_search(&range);
-        match pos {
-            Ok(pos) => (Some(pos), Some(pos), pos),
-            Err(pos) => {
-                let mut left: Option<usize> = None;
-                let mut right: Option<usize> = None;
-
-                if pos > 0 {
-                    let prev_range = &self.ranges[pos - 1];
-                    if prev_range.1 >= range.0 {
-                        left = Some(pos - 1)
-                    }
-                }
-
-                if pos < self.ranges.len() {
-                    let next_range = &self.ranges[pos];
-                    if next_range.0 <= range.1 {
-                        right = Some(pos)
-                    }
-                }
-
-                (left, right, pos)
-            }
-        }
-    }
-
-    fn insert_range(&mut self, range: MyRange) {
-        if range.0 > range.1 {
-            self.insert_range((range.1, range.0));
-            return;
-        }
-
-        let (left, right, pos) = self.get_overlaps_range(range);
-
-        if left.is_none() && right.is_none() {
-            self.ranges.insert(pos, range);
-            return;
-        }
-        if left.is_some() && right.is_some() {
-            if left == right {
-                return;
-            }
-            self.ranges[left.unwrap()].1 = self.ranges[right.unwrap()].1;
-            self.ranges.remove(right.unwrap());
-            return;
-        }
-        if left.is_some() {
-            self.ranges[left.unwrap()].1 = max(range.1, self.ranges[left.unwrap()].1);
-            return;
-        }
-        if right.is_some() {
-            self.ranges[right.unwrap()].0 = min(range.0, self.ranges[right.unwrap()].0);
-            return;
-        }
-    }
 }

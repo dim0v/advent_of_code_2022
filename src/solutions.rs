@@ -1,7 +1,9 @@
 use seq_macro::seq;
 use crate::Stage;
 
-seq!(N in 1..=14 {
+mod common;
+
+seq!(N in 1..=15 {
     
     #(
         mod day~N;
