@@ -34,9 +34,9 @@ fn solve_hard(sensors: &[Sensor], beacons: &[Point2]) -> usize {
     const X_MUL: isize = 4000000;
     let mut range_set = RangeSet::with_capacity(sensors.len());
 
-    for row in 0..=POS_MAX {
+    // a dirty trick to halve the execution time :D
+    for row in (0..=POS_MAX).rev() {
         count_row(&mut range_set, &sensors, &beacons, row);
-        // TODO: check with binary search
         for range in range_set.ranges() {
             if range.to >= 0 && range.to < POS_MAX {
                 return (X_MUL * (range.to + 1) + row) as usize;
