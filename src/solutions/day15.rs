@@ -1,8 +1,9 @@
 use std::str::FromStr;
+use std::thread;
 
-use crate::solutions::common::RangeSet;
 use anyhow::anyhow;
 
+use crate::solutions::common::RangeSet;
 use crate::Stage;
 
 pub fn solve(stage: Stage, input: &str) -> String {
@@ -41,19 +42,35 @@ fn solve_easy(sensors: &[Sensor], beacons: &[Point2]) -> usize {
 fn solve_hard(sensors: &[Sensor]) -> usize {
     const POS_MAX: isize = 4000000;
     const X_MUL: isize = 4000000;
-    let mut range_set = RangeSet::with_capacity(sensors.len());
+    let n_threads = thread::available_parallelism().unwrap().get();
 
-    // a dirty trick to halve the execution time :D
-    for row in (0..=POS_MAX).rev() {
-        fill_range_set_for_row(&mut range_set, &sensors, row);
-        for range in range_set.ranges() {
-            if range.to >= 0 && range.to < POS_MAX {
-                return (X_MUL * (range.to + 1) + row) as usize;
-            }
-        }
+    let threads: Vec<_> = (0..n_threads)
+        .map(|i| {
+            let sensors: Vec<_> = sensors.iter().map(|x| x.clone()).collect();
+
+            thread::spawn(move || {
+                let mut range_set = RangeSet::with_capacity(sensors.len());
+
+                for row in (i as isize..=POS_MAX).step_by(n_threads) {
+                    fill_range_set_for_row(&mut range_set, &sensors, row);
+                    for range in range_set.ranges() {
+                        if range.to >= 0 && range.to < POS_MAX {
+                            return Some((X_MUL * (range.to + 1) + row) as usize);
+                        }
+                    }
+                }
+
+                None
+            })
+        })
+        .collect();
+
+    let mut result = None;
+    for t in threads {
+        result = result.or(t.join().unwrap())
     }
 
-    0
+    result.unwrap_or(0)
 }
 
 fn fill_range_set_for_row(range_set: &mut RangeSet, sensors: &[Sensor], row: isize) {
