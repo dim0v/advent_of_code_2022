@@ -1,4 +1,4 @@
-use criterion::{black_box, Criterion, criterion_group, criterion_main};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 use advent_of_code_2022::solutions::{get_solver_for_day, INPUTS, N_DAYS};
 use advent_of_code_2022::Stage;
@@ -12,20 +12,35 @@ fn bench_total(c: &mut Criterion) {
             }
         })
     });
+}
+
+fn bench_easy(c: &mut Criterion) {
+    let mut g = c.benchmark_group("Easy");
 
     for i in 1..=N_DAYS {
-        for stage in [Stage::Easy, Stage::Hard] {
-            let id = format!("Day {:02} - {}", i, stage);
-            c.bench_function(&*id, |b| {
-                b.iter(|| {
-                    black_box(compute_answer(i, stage));
-                });
+        let id = format!("Day{:02}", i);
+        g.bench_function(&*id, |b| {
+            b.iter(|| {
+                black_box(compute_answer(i, Stage::Easy));
             });
-        }
+        });
     }
 }
 
-criterion_group!(benches, bench_total);
+fn bench_hard(c: &mut Criterion) {
+    let mut g = c.benchmark_group("Hard");
+
+    for i in 1..=N_DAYS {
+        let id = format!("Day{:02}", i);
+        g.bench_function(&*id, |b| {
+            b.iter(|| {
+                black_box(compute_answer(i, Stage::Hard));
+            });
+        });
+    }
+}
+
+criterion_group!(benches, bench_total, bench_easy, bench_hard);
 criterion_main!(benches);
 
 fn compute_answer(day: u8, stage: Stage) -> String {
