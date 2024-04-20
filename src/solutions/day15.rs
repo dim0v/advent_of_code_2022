@@ -1,5 +1,6 @@
 use std::str::FromStr;
 use std::thread;
+use std::sync::mpsc;
 
 use anyhow::anyhow;
 
@@ -43,11 +44,13 @@ fn solve_hard(sensors: &[Sensor]) -> usize {
     const POS_MAX: isize = 4000000;
     const X_MUL: isize = 4000000;
     let n_threads = thread::available_parallelism().unwrap().get();
+    
+    let (tx, rx) = mpsc::channel();
 
-    let threads: Vec<_> = (0..n_threads)
+    let _threads: Vec<_> = (0..n_threads)
         .map(|i| {
             let sensors: Vec<_> = sensors.iter().map(|x| x.clone()).collect();
-
+            let tx = tx.clone();
             thread::spawn(move || {
                 let mut range_set = RangeSet::with_capacity(sensors.len());
 
@@ -55,22 +58,15 @@ fn solve_hard(sensors: &[Sensor]) -> usize {
                     fill_range_set_for_row(&mut range_set, &sensors, row);
                     for range in range_set.ranges() {
                         if range.to >= 0 && range.to < POS_MAX {
-                            return Some((X_MUL * (range.to + 1) + row) as usize);
+                            tx.send(X_MUL * (range.to + 1) + row).unwrap();
                         }
                     }
                 }
-
-                None
             })
         })
         .collect();
 
-    let mut result = None;
-    for t in threads {
-        result = result.or(t.join().unwrap())
-    }
-
-    result.unwrap_or(0)
+    rx.recv().unwrap() as usize
 }
 
 fn fill_range_set_for_row(range_set: &mut RangeSet, sensors: &[Sensor], row: isize) {
