@@ -1,6 +1,7 @@
 use std::str::FromStr;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
-use std::sync::mpsc;
+use std::sync::{Arc, mpsc};
 
 use anyhow::anyhow;
 
@@ -46,19 +47,24 @@ fn solve_hard(sensors: &[Sensor]) -> usize {
     let n_threads = thread::available_parallelism().unwrap().get();
     
     let (tx, rx) = mpsc::channel();
+    let found = Arc::new(AtomicBool::new(false));
 
     let _threads: Vec<_> = (0..n_threads)
         .map(|i| {
             let sensors: Vec<_> = sensors.iter().map(|x| x.clone()).collect();
             let tx = tx.clone();
+            let found = Arc::clone(&found);
             thread::spawn(move || {
                 let mut range_set = RangeSet::with_capacity(sensors.len());
 
-                for row in (i as isize..=POS_MAX).step_by(n_threads) {
+                for row in (0isize..=POS_MAX - i as isize).rev().step_by(n_threads) {
+                    if found.load(Ordering::Acquire) { return }
+
                     fill_range_set_for_row(&mut range_set, &sensors, row);
                     for range in range_set.ranges() {
                         if range.to >= 0 && range.to < POS_MAX {
                             tx.send(X_MUL * (range.to + 1) + row).unwrap();
+                            found.store(true, Ordering::Release)
                         }
                     }
                 }
