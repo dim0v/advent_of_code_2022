@@ -1,7 +1,6 @@
 use std::cmp::max;
+use std::iter;
 use std::ops::Deref;
-use std::sync::Arc;
-use std::{iter, thread};
 
 use ahash::AHashMap;
 
@@ -23,10 +22,16 @@ fn search(g: Graph, time: i64, split: bool) -> i64 {
         v: usize,
         visited: u64,
         mut time_remaining: i64,
+        cache: &mut AHashMap<u64, AHashMap<i64, i64>>,
     ) -> i64 {
         if time_remaining <= 0 {
             return 0;
         }
+
+        if let Some(cached) = cache.get(&visited).map(|x| x.get(&time_remaining)).flatten() {
+            return *cached;
+        }
+
         let base = g.flow_rates[v] * time_remaining;
         time_remaining -= 1;
 
@@ -43,48 +48,32 @@ fn search(g: Graph, time: i64, split: bool) -> i64 {
                     i,
                     visited | (1 << i),
                     time_remaining - g.get_len(v, i),
+                    cache,
                 ),
             )
         }
 
-        best + base
+        let result = best + base;
+        cache.entry(visited).or_default().entry(time_remaining + 1).or_insert(result);
+
+        result
     }
+
+    let variants_count = match split {
+        true => 1u64 << (g.non_zero_flow_cnt - 1),
+        false => 1,
+    };
 
     let start = g.aa_idx;
-
-    if !split {
-        return search_impl(&g, start, 0, time);
-    }
-
-    let g = Arc::new(g);
-
-    let variants_count = 1u64 << (g.non_zero_flow_cnt - 1);
-    let n_threads = thread::available_parallelism().unwrap().get();
-    let batch_size = variants_count / n_threads as u64;
-
-    let threads: Vec<_> = (0..n_threads as u64)
-        .map(|i| {
-            let range = batch_size * i..batch_size * (i + 1);
-            let g = Arc::clone(&g);
-            thread::spawn(move || {
-                let mut result = 0;
-
-                for mask in range {
-                    let total_a = search_impl(Arc::clone(&g), start, mask, time);
-                    let total_b = search_impl(Arc::clone(&g), start, !mask, time);
-                    
-                    result = max(result, total_a + total_b);
-                }
-
-                result
-            })
-        })
-        .collect();
+    let mut cache = AHashMap::new();
 
     let mut result = 0;
 
-    for thread in threads {
-        result = max(result, thread.join().unwrap())
+    for mask in 0..variants_count {
+        let total_a = search_impl(&g, start, mask, time, &mut cache);
+        let total_b = search_impl(&g, start, !mask, time, &mut cache);
+
+        result = max(result, total_a + total_b);
     }
 
     result
