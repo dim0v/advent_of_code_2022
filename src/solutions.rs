@@ -3,7 +3,7 @@ use crate::Stage;
 
 mod common;
 
-seq!(N in 1..=15 {
+seq!(N in 1..=16 {
     
     #(
         mod day~N;
