@@ -1,6 +1,5 @@
 use std::cmp::max;
 use std::iter;
-use std::ops::Deref;
 
 use ahash::AHashMap;
 
@@ -17,19 +16,23 @@ pub fn solve(stage: Stage, input: &str) -> String {
 }
 
 fn search(g: Graph, time: i64, split: bool) -> i64 {
-    fn search_impl(
-        g: impl Deref<Target = Graph> + Clone,
+    fn search_impl<F>(
+        g: &Graph,
         v: usize,
         visited: u64,
         mut time_remaining: i64,
-        cache: &mut AHashMap<u64, AHashMap<i64, i64>>,
-    ) -> i64 {
+        cache: &mut Vec<Option<i64>>,
+        cache_index_provider: &F,
+    ) -> i64
+    where
+        F: Fn(u64, i64) -> usize,
+    {
         if time_remaining <= 0 {
             return 0;
         }
 
-        if let Some(cached) = cache.get(&visited).map(|x| x.get(&time_remaining)).flatten() {
-            return *cached;
+        if let Some(cached) = cache[cache_index_provider(visited, time_remaining - 1)] {
+            return cached;
         }
 
         let base = g.flow_rates[v] * time_remaining;
@@ -44,34 +47,43 @@ fn search(g: Graph, time: i64, split: bool) -> i64 {
             best = max(
                 best,
                 search_impl(
-                    g.clone(),
+                    g,
                     i,
                     visited | (1 << i),
                     time_remaining - g.get_len(v, i),
                     cache,
+                    cache_index_provider,
                 ),
             )
         }
 
         let result = best + base;
-        cache.entry(visited).or_default().entry(time_remaining + 1).or_insert(result);
+        cache[cache_index_provider(visited, time_remaining)] = Some(result);
 
         result
     }
 
+    let visited_max = 1u64 << g.non_zero_flow_cnt;
     let variants_count = match split {
-        true => 1u64 << (g.non_zero_flow_cnt - 1),
+        true => visited_max >> 1,
         false => 1,
     };
 
     let start = g.aa_idx;
-    let mut cache = AHashMap::new();
+    let mut cache = iter::repeat(None)
+        .take((visited_max * time as u64) as usize)
+        .collect();
 
     let mut result = 0;
 
+    let index_provider = |visited, time_remaining| {
+        let visited = visited & (visited_max - 1);
+        (visited as i64 * time + time_remaining) as usize
+    };
+
     for mask in 0..variants_count {
-        let total_a = search_impl(&g, start, mask, time, &mut cache);
-        let total_b = search_impl(&g, start, !mask, time, &mut cache);
+        let total_a = search_impl(&g, start, mask, time, &mut cache, &index_provider);
+        let total_b = search_impl(&g, start, !mask, time, &mut cache, &index_provider);
 
         result = max(result, total_a + total_b);
     }
