@@ -1,4 +1,4 @@
-use std::cmp::max;
+use std::cmp::{max, min};
 use std::iter;
 
 use ahash::AHashMap;
@@ -25,13 +25,13 @@ fn search(g: Graph, time: i64, split: bool) -> i64 {
         cache_index_provider: &F,
     ) -> i64
     where
-        F: Fn(u64, i64) -> usize,
+        F: Fn(usize, u64, i64) -> usize,
     {
         if time_remaining <= 0 {
             return 0;
         }
 
-        if let Some(cached) = cache[cache_index_provider(visited, time_remaining - 1)] {
+        if let Some(cached) = cache[cache_index_provider(v, visited, time_remaining - 1)] {
             return cached;
         }
 
@@ -58,7 +58,7 @@ fn search(g: Graph, time: i64, split: bool) -> i64 {
         }
 
         let result = best + base;
-        cache[cache_index_provider(visited, time_remaining)] = Some(result);
+        cache[cache_index_provider(v, visited, time_remaining)] = Some(result);
 
         result
     }
@@ -71,14 +71,19 @@ fn search(g: Graph, time: i64, split: bool) -> i64 {
 
     let start = g.aa_idx;
     let mut cache = iter::repeat(None)
-        .take((visited_max * time as u64) as usize)
+        .take((g.non_zero_flow_cnt + 1) * (visited_max * time as u64) as usize)
         .collect();
 
     let mut result = 0;
 
-    let index_provider = |visited, time_remaining| {
+    let index_provider = |v, visited, time_remaining| {
         let visited = visited & (visited_max - 1);
-        (visited as i64 * time + time_remaining) as usize
+        let v = min(v, g.non_zero_flow_cnt);
+        let mut idx = v;
+        idx = idx * visited_max as usize + visited as usize;
+        idx = idx * time as usize + time_remaining as usize;
+        
+        idx
     };
 
     for mask in 0..variants_count {
