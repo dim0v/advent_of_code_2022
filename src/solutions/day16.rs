@@ -1,6 +1,5 @@
 use std::cmp::max;
 use std::iter;
-use std::process::id;
 
 use ahash::AHashMap;
 
@@ -181,9 +180,10 @@ impl Cache {
         let time_remaining = time_remaining as usize - 1;
         let dst_mask = dst_mask as usize & (self.max_mask - 1);
 
-        let mut idx = dst_mask;
-        idx = idx * self.max_time + time_remaining;
+        let mut idx = 0;
         idx = idx * (self.max_v_idx + 1) + src_idx.clamp(0, self.max_v_idx);
+        idx = idx * self.max_time + time_remaining;
+        idx = idx * self.max_mask + dst_mask;
 
         idx
     }
