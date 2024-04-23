@@ -1,5 +1,6 @@
-use std::cmp::{max, min};
+use std::cmp::max;
 use std::iter;
+use std::process::id;
 
 use ahash::AHashMap;
 
@@ -16,22 +17,18 @@ pub fn solve(stage: Stage, input: &str) -> String {
 }
 
 fn search(g: Graph, time: i64, split: bool) -> i64 {
-    fn search_impl<F>(
+    fn search_impl(
         g: &Graph,
         v: usize,
         visited: u64,
         mut time_remaining: i64,
-        cache: &mut Vec<Option<i64>>,
-        cache_index_provider: &F,
-    ) -> i64
-    where
-        F: Fn(usize, u64, i64) -> usize,
-    {
+        cache: &mut Cache,
+    ) -> i64 {
         if time_remaining <= 0 {
             return 0;
         }
 
-        if let Some(cached) = cache[cache_index_provider(v, visited, time_remaining - 1)] {
+        if let Some(cached) = cache.get(v, visited, time_remaining) {
             return cached;
         }
 
@@ -52,13 +49,12 @@ fn search(g: Graph, time: i64, split: bool) -> i64 {
                     visited | (1 << i),
                     time_remaining - g.get_len(v, i),
                     cache,
-                    cache_index_provider,
                 ),
             )
         }
 
         let result = best + base;
-        cache[cache_index_provider(v, visited, time_remaining)] = Some(result);
+        cache.set(v, visited, time_remaining + 1, result);
 
         result
     }
@@ -70,25 +66,13 @@ fn search(g: Graph, time: i64, split: bool) -> i64 {
     };
 
     let start = g.aa_idx;
-    let mut cache = iter::repeat(None)
-        .take((g.non_zero_flow_cnt + 1) * (visited_max * time as u64) as usize)
-        .collect();
+    let mut cache = Cache::new(&g, time);
 
     let mut result = 0;
 
-    let index_provider = |v, visited, time_remaining| {
-        let visited = visited & (visited_max - 1);
-        let v = min(v, g.non_zero_flow_cnt);
-        let mut idx = v;
-        idx = idx * visited_max as usize + visited as usize;
-        idx = idx * time as usize + time_remaining as usize;
-        
-        idx
-    };
-
     for mask in 0..variants_count {
-        let total_a = search_impl(&g, start, mask, time, &mut cache, &index_provider);
-        let total_b = search_impl(&g, start, !mask, time, &mut cache, &index_provider);
+        let total_a = search_impl(&g, start, mask, time, &mut cache);
+        let total_b = search_impl(&g, start, !mask, time, &mut cache);
 
         result = max(result, total_a + total_b);
     }
@@ -167,6 +151,55 @@ impl Graph {
     fn set_len(&mut self, from: usize, to: usize, new_len: i64) {
         let i = from * self.vertex_count() + to;
         self.lengths[i] = new_len
+    }
+}
+
+struct Cache {
+    data: Vec<i64>,
+    max_mask: usize,
+    max_time: usize,
+    max_v_idx: usize,
+}
+
+impl Cache {
+    fn new(g: &Graph, max_time: i64) -> Cache {
+        let max_mask = 1usize << g.non_zero_flow_cnt;
+        let max_v_idx = g.non_zero_flow_cnt + 1;
+        let max_time = max_time as usize;
+
+        Cache {
+            data: iter::repeat(-1)
+                .take(max_mask * max_time * (max_v_idx + 1))
+                .collect(),
+            max_mask,
+            max_time,
+            max_v_idx,
+        }
+    }
+
+    fn get_idx(&self, src_idx: usize, dst_mask: u64, time_remaining: i64) -> usize {
+        let time_remaining = time_remaining as usize - 1;
+        let dst_mask = dst_mask as usize & (self.max_mask - 1);
+
+        let mut idx = dst_mask;
+        idx = idx * self.max_time + time_remaining;
+        idx = idx * (self.max_v_idx + 1) + src_idx.clamp(0, self.max_v_idx);
+
+        idx
+    }
+
+    fn get(&self, src_idx: usize, dst_mask: u64, time_remaining: i64) -> Option<i64> {
+        let idx = self.get_idx(src_idx, dst_mask, time_remaining);
+        if self.data[idx] < 0 {
+            None
+        } else {
+            Some(self.data[idx])
+        }
+    }
+
+    fn set(&mut self, src_idx: usize, dst_mask: u64, time_remaining: i64, value: i64) {
+        let idx = self.get_idx(src_idx, dst_mask, time_remaining);
+        self.data[idx] = value;
     }
 }
 
